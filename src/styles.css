@@ -1,0 +1,5 @@
+
+/* Minimal styling */
+body { margin:0; font-family: Georgia, 'Times New Roman', serif; background:#f6ece8; }
+input, button { font-family: inherit; }
+a { color: inherit; }

@@ -1,0 +1,47 @@
+.invoice-table {
+  width: 100%;
+  display: grid;
+  gap: 4px;
+}
+
+.invoice-table-header,
+.invoice-table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+  padding: 6px 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.invoice-table-header {
+  background: #f3e9e7;
+  font-weight: 600;
+}
+
+.invoice-table-row div {
+  overflow-wrap: anywhere;
+}
+
+/* Mobile view - convert rows to cards */
+@media (max-width: 700px) {
+  .invoice-table-header {
+    display: none;
+  }
+
+  .invoice-table-row {
+    display: flex;
+    flex-direction: column;
+    background: #fdf9f8;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .invoice-table-row div {
+    margin: 2px 0;
+    font-size: 14px;
+  }
+
+  .invoice-table-row div:first-child {
+    font-weight: 600;
+  }
+}

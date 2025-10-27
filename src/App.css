@@ -1,0 +1,14 @@
+.app-container {
+  display: grid;
+  grid-template-columns: 360px 1fr; /* Left panel wider */
+  gap: 20px;
+  max-width: 1200px;
+  margin: 20px auto;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    grid-template-columns: 1fr;
+  }
+}
