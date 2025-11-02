@@ -8,8 +8,8 @@ export default function InvoiceForm({
   customer,
   setCustomer,
   addItem,
-  invoiceRef,       // ✅ Add this prop
-  grandTotal,       // ✅ Add this prop (from App.jsx)
+  invoiceRef,
+  grandTotal,
 }) {
   const [newItem, setNewItem] = useState({
     name: '',
@@ -34,12 +34,14 @@ export default function InvoiceForm({
     <div className="form-container">
       <h2 className="form-title">VedAarna Invoice Builder</h2>
 
-      {/* Invoice Info */}
+      {/* -------------------------
+          INVOICE META INFO
+      -------------------------- */}
       <div className="form-section">
         <label>Invoice #</label>
         <input
           type="text"
-          value={invoiceMeta.number}
+          value={invoiceMeta.number || 'VA#1001'}
           onChange={(e) =>
             setInvoiceMeta({ ...invoiceMeta, number: e.target.value })
           }
@@ -55,7 +57,34 @@ export default function InvoiceForm({
         />
       </div>
 
-      {/* Customer Info */}
+      {/* -------------------------
+          GSTIN & ADVANCE PAYMENT
+      -------------------------- */}
+      <div className="form-section">
+        <label>GSTIN (optional)</label>
+        <input
+          type="text"
+          value={customer.gstin}
+          onChange={(e) => setCustomer({ ...customer, gstin: e.target.value })}
+          placeholder="Enter GSTIN (leave blank or NA if not applicable)"
+        />
+
+        {/* ✅ Advance Payment Field */}
+        <label>Advance Payment (₹)</label>
+        <input
+          type="number"
+          min="0"
+          value={customer.advance || ''}
+          onChange={(e) =>
+            setCustomer({ ...customer, advance: Number(e.target.value) })
+          }
+          placeholder="e.g. 1000"
+        />
+      </div>
+
+      {/* -------------------------
+          CUSTOMER DETAILS
+      -------------------------- */}
       <div className="form-section">
         <h4>Customer</h4>
 
@@ -64,6 +93,7 @@ export default function InvoiceForm({
           type="text"
           value={customer.name}
           onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
+          placeholder="Full Name"
         />
 
         <label>Phone</label>
@@ -71,6 +101,7 @@ export default function InvoiceForm({
           type="text"
           value={customer.phone}
           onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
+          placeholder="10-digit phone number"
         />
 
         <label>Email</label>
@@ -78,10 +109,13 @@ export default function InvoiceForm({
           type="email"
           value={customer.email}
           onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
+          placeholder="Email address"
         />
       </div>
 
-      {/* Add Item */}
+      {/* -------------------------
+          ADD ITEM SECTION
+      -------------------------- */}
       <div className="form-section">
         <h4>Add Item</h4>
 
@@ -135,7 +169,9 @@ export default function InvoiceForm({
         </button>
       </div>
 
-      {/* ---- Invoice Actions Section ---- */}
+      {/* -------------------------
+          INVOICE ACTION BUTTONS
+      -------------------------- */}
       <div className="form-section">
         <InvoiceActions
           invoiceRef={invoiceRef}

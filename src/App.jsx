@@ -39,6 +39,7 @@ export default function App() {
           customer={customer}
           invoiceMeta={invoiceMeta}
           items={items}
+          setItems={setItems}
           subtotal={subtotal}
           totalDiscount={totalDiscount}
           totalTax={totalTax}
