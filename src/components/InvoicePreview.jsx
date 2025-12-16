@@ -17,25 +17,25 @@ export default function InvoicePreview({
   grandTotal,
   invoiceRef,
 }) {
-  // Validate GSTIN
+  // track hovered row for showing remove icon
+  const [hoveredItemId, setHoveredItemId] = useState(null);
+  // track which item currently showing confirmation tooltip
+  const [confirmItemId, setConfirmItemId] = useState(null);
+
   const hasValidCustomerGST =
     customer?.gstin &&
     customer.gstin.trim() !== "" &&
     customer.gstin.trim().toUpperCase() !== "NA";
 
-  // Advance payment logic
-  const advanceAmount = Number(customer.advance || 0);
-  const finalTotal = grandTotal - advanceAmount;
+  const advanceAmount = Number(customer?.advance || 0);
+  const finalTotal = (grandTotal || 0) - advanceAmount;
 
-  // Track hovered and confirm states per item
-  const [hoveredItem, setHoveredItem] = useState(null);
-  const [confirmItem, setConfirmItem] = useState(null);
-
-  // Delete specific item
-  const handleDeleteItem = (id) => {
-    const updated = items.filter((it) => it.id !== id);
-    setItems(updated);
-    setConfirmItem(null); // Close tooltip
+  const handleDeleteConfirmed = (id) => {
+    // remove only the specific item
+    setItems((prev) => prev.filter((it) => it.id !== id));
+    setConfirmItemId(null);
+    // optional: clear hovered id if it was the same
+    if (hoveredItemId === id) setHoveredItemId(null);
   };
 
   return (
@@ -48,52 +48,31 @@ export default function InvoicePreview({
         boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
       }}
     >
-      {/* HEADER */}
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          borderBottom: "2px solid #7b2a2a",
-          paddingBottom: 10,
-        }}
-      >
+      {/* Header */}
+      <header style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", borderBottom: "2px solid #7b2a2a", paddingBottom: 10 }}>
         <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-          <img
-            src={`${import.meta.env.BASE_URL}logo_new.jpg`}
-            alt="logo"
-            style={{ height: 80, borderRadius: 6 }}
-          />
+          <img src={`${import.meta.env.BASE_URL}logo_new.jpg`} alt="logo" style={{ height: 80, borderRadius: 6 }} />
           <div style={{ color: "#6b3b3b", fontSize: 13 }}>
-            VedAarna Studio
-            <br />
-            525, Lower Ground Floor, Sector - 27
-            <br />
-            Gurugram, Haryana - 122009
+            VedAarna Studio<br />525, Lower Ground Floor, Sector - 27<br />Gurugram, Haryana - 122009
           </div>
         </div>
-
         <div style={{ textAlign: "right" }}>
           <h3 style={{ color: "#7b2a2a", margin: 0 }}>TAX INVOICE</h3>
           <div style={{ marginTop: 6 }}>
-            <div>
-              Invoice #: <strong>{invoiceMeta.number}</strong>
-            </div>
-            <div>
-              Date: <strong>{invoiceMeta.date}</strong>
-            </div>
+            <div>Invoice #: <strong>{invoiceMeta?.number}</strong></div>
+            <div>Date: <strong>{invoiceMeta?.date}</strong></div>
           </div>
         </div>
       </header>
 
-      {/* BILL TO / PAYABLE TO */}
       <section style={{ marginTop: 16 }}>
+        {/* Bill To / Payable To boxes */}
         <div className="invoice-header-section">
           <div className="bill-to box">
             <div style={{ fontWeight: 600, marginBottom: 6 }}>Bill To</div>
-            <div>{customer.name}</div>
-            <div>{customer.phone}</div>
-            <div>{customer.email}</div>
+            <div>{customer?.name}</div>
+            <div>{customer?.phone}</div>
+            <div>{customer?.email}</div>
           </div>
 
           <div className="payable-to box">
@@ -103,7 +82,7 @@ export default function InvoicePreview({
           </div>
         </div>
 
-        {/* INVOICE TABLE */}
+        {/* Invoice table header */}
         <div className="invoice-table" style={{ marginTop: 16 }}>
           <div className="invoice-table-header">
             <div></div>
@@ -115,6 +94,7 @@ export default function InvoicePreview({
             <div>Amount</div>
           </div>
 
+          {/* Rows with AnimatePresence */}
           <AnimatePresence>
             {items.map((it) => {
               const amount = (it.qty || 0) * (it.rate || 0);
@@ -127,46 +107,73 @@ export default function InvoicePreview({
                 <motion.div
                   key={it.id}
                   className="invoice-table-row item-row"
-                  onMouseEnter={() => setHoveredItem(it.id)}
+                  layout
+                  onMouseEnter={() => setHoveredItemId(it.id)}
                   onMouseLeave={() => {
-                    if (confirmItem !== it.id) setHoveredItem(null);
+                    // if confirmation is open for this item we keep hovered state until tooltip closed
+                    if (confirmItemId !== it.id) setHoveredItemId(null);
                   }}
-                  initial={{ opacity: 0, y: -5 }}
+                  initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ duration: 0.25 }}
+                  style={{ display: "grid", gridTemplateColumns: "0.6fr 2fr 1fr 1fr 1fr 1fr 1fr", alignItems: "center", gap: "6px", position: "relative" }}
                 >
-                  {/* Remove button */}
+                  {/* Remove button + per-item tooltip */}
                   <div style={{ position: "relative", textAlign: "center" }}>
-                    <button
-                      className="remove-btn always-visible"
-                      onClick={() =>
-                        setConfirmItem(confirmItem === it.id ? null : it.id)
-                      }
-                    >
-                      −
-                    </button>
+                    {/* show button only when hoveredItemId === this id */}
+                    {hoveredItemId === it.id && (
+                      <button
+                        className="remove-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // toggle confirmation for this item
+                          setConfirmItemId((cur) => (cur === it.id ? null : it.id));
+                        }}
+                        title="Remove item"
+                      >
+                        −
+                      </button>
+                    )}
 
+                    {/* tooltip popped only for the item with confirmItemId */}
                     <AnimatePresence>
-                      {confirmItem === it.id && (
+                      {confirmItemId === it.id && (
                         <motion.div
                           className="remove-tooltip"
-                          initial={{ opacity: 0, y: -5 }}
+                          initial={{ opacity: 0, y: -6 }}
                           animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -5 }}
-                          transition={{ duration: 0.2 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.18 }}
+                          onMouseEnter={() => {
+                            // keep tooltip alive while mouse is over it
+                            setConfirmItemId(it.id);
+                            setHoveredItemId(it.id);
+                          }}
+                          onMouseLeave={() => {
+                            // close tooltip when user leaves tooltip area
+                            setConfirmItemId(null);
+                            setHoveredItemId(null);
+                          }}
                         >
-                          <span>Remove this item?</span>
-                          <div className="tooltip-actions">
+                          <div>Remove this item?</div>
+                          <div className="tooltip-actions" style={{ marginTop: 6 }}>
                             <button
                               className="confirm-btn"
-                              onClick={() => handleDeleteItem(it.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteConfirmed(it.id);
+                              }}
                             >
                               Yes
                             </button>
                             <button
                               className="cancel-btn"
-                              onClick={() => setConfirmItem(null)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmItemId(null);
+                                setHoveredItemId(null);
+                              }}
                             >
                               No
                             </button>
@@ -188,55 +195,22 @@ export default function InvoicePreview({
           </AnimatePresence>
         </div>
 
-        {/* TOTALS */}
+        {/* Totals */}
         <div style={{ textAlign: "right", marginTop: 12 }}>
-          <div>
-            Subtotal: <strong>{currency(subtotal)}</strong>
-          </div>
-          <div>
-            Discount: <strong>- {currency(totalDiscount)}</strong>
-          </div>
-          <div>
-            Tax: <strong>{currency(totalTax)}</strong>
-          </div>
-
-          {advanceAmount > 0 && (
-            <div style={{ color: "#b91c1c" }}>
-              Advance Payment: <strong>- {currency(advanceAmount)}</strong>
-            </div>
-          )}
-
-          <div
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              marginTop: 8,
-              color: "#7b2a2a",
-            }}
-          >
-            Grand Total: {currency(finalTotal)}
-          </div>
+          <div>Subtotal: <strong>{currency(subtotal)}</strong></div>
+          <div>Discount: <strong>- {currency(totalDiscount)}</strong></div>
+          <div>Tax: <strong>{currency(totalTax)}</strong></div>
+          {advanceAmount > 0 && <div style={{ color: "#b91c1c" }}>Advance Payment: <strong>- {currency(advanceAmount)}</strong></div>}
+          <div style={{ fontSize: 20, fontWeight: 700, marginTop: 8, color: "#7b2a2a" }}>Grand Total: {currency(finalTotal)}</div>
         </div>
 
-        {/* FOOTER */}
+        {/* Footer & banner */}
         <div style={{ marginTop: 40, color: "#6b3b3b", textAlign: "center" }}>
-          Thank you for shopping at VedAarna Studio.
-          <br />
-          For custom fittings allow 7–10 days.
+          Thank you for shopping at VedAarna Studio.<br />For custom fittings allow 7–10 days.
         </div>
 
-        {/* BOTTOM BANNER */}
         <div style={{ marginTop: 16, textAlign: "center" }}>
-          <img
-            src={`${import.meta.env.BASE_URL}Bottom_Banner.jpg`}
-            alt="VedAarna Studio Banner"
-            style={{
-              width: "100%",
-              marginTop: 16,
-              borderRadius: 8,
-              objectFit: "cover",
-            }}
-          />
+          <img src={`${import.meta.env.BASE_URL}Bottom_Banner.jpg`} alt="VedAarna Studio Banner" style={{ width: "100%", marginTop: 16, borderRadius: 8, objectFit: "cover" }} />
         </div>
       </section>
     </div>

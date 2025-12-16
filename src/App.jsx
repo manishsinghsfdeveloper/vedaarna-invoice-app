@@ -10,7 +10,21 @@ export default function App() {
   const invoiceRef = useRef(null)
 
   function addItem(item) {
-    setItems(prev => [...prev, item])
+    const id =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+
+    const newItem = {
+      id,
+      name: item.name || '',
+      qty: Number(item.qty || 1),
+      rate: Number(item.rate || 0),
+      discount: Number(item.discount || 0),
+      tax: Number(item.tax || 0),
+    };
+
+    setItems(prev => [...prev, newItem]);
   }
 
   const subtotal = items.reduce((acc, i) => acc + i.qty * i.rate, 0)

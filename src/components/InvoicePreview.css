@@ -152,11 +152,11 @@
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  transition: all 0.25s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.7;
+  transition: all 0.18s ease;
+  opacity: 0.9;
 }
 
 /* Hover animation */
@@ -172,20 +172,18 @@
 /* Tooltip styling */
 .remove-tooltip {
   position: absolute;
-  top: -45px;
+  top: -48px;
   left: 50%;
   transform: translateX(-50%);
   background: #fff;
   border: 1px solid #e9dcd8;
   border-radius: 8px;
-  padding: 6px 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 8px 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
   font-size: 12px;
   color: #4a2a2a;
-  text-align: center;
   white-space: nowrap;
-  z-index: 10;
-  animation: fadeIn 0.25s ease forwards;
+  z-index: 20;
 }
 
 @keyframes fadeIn {
