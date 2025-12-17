@@ -49,41 +49,4 @@ button {
 .btn-image:hover {
   background: #b58b68;
 }
-/* ==============================
-   A5 Invoice Print Button
-   ============================== */
-
-.btn-a5 {
-  background: linear-gradient(135deg, #7b2a2a, #9a3a3a); /* VedAarna maroon */
-  color: #fff;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 2px 6px rgba(123, 42, 42, 0.25);
-}
-
-.btn-a5:hover:not(:disabled) {
-  background: linear-gradient(135deg, #8c3434, #b45353);
-  transform: translateY(-1px);
-}
-
-.btn-a5:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.invoice-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-@media print {
-  .invoice-actions {
-    display: none;
-  }
-}
 
