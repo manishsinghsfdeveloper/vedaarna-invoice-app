@@ -50,3 +50,18 @@ button {
   background: #b58b68;
 }
 
+/* A5 PDF download button */
+.btn-a5 {
+  background: #4b6a8a;
+  color: #fff;
+}
+
+.btn-a5:hover {
+  background: #3a5470;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+

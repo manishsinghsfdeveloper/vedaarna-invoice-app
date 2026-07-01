@@ -1,0 +1,239 @@
+/* ============================================================
+   Invoice Agent — Floating button + slide-up chat panel
+   Maroon theme to match VedAarna brand
+   ============================================================ */
+
+/* ── Floating Action Button ─────────────────────────────── */
+.agent-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #7b2a2a;
+  color: #fff;
+  border: none;
+  border-radius: 28px;
+  padding: 10px 18px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(123, 42, 42, 0.35);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.agent-fab:hover {
+  background: #5e1f1f;
+  box-shadow: 0 6px 20px rgba(123, 42, 42, 0.45);
+}
+
+.agent-fab--open {
+  background: #5e1f1f;
+}
+
+.agent-fab-label {
+  font-size: 13px;
+  letter-spacing: 0.3px;
+}
+
+/* ── Chat Panel ─────────────────────────────────────────── */
+.agent-panel {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  z-index: 999;
+  width: 320px;
+  max-height: 500px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e9dcd8;
+  animation: agent-slide-up 0.22s ease;
+}
+
+@keyframes agent-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Panel Header ───────────────────────────────────────── */
+.agent-panel__header {
+  background: #7b2a2a;
+  color: #fff;
+  padding: 10px 14px;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.agent-panel__header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.agent-reset-btn {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 4px;
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.agent-reset-btn:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.agent-close-btn {
+  background: transparent;
+  color: #fff;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+/* ── Messages Area ──────────────────────────────────────── */
+.agent-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 12px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fdf9f8;
+}
+
+/* Bubbles */
+.agent-bubble {
+  max-width: 88%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.agent-bubble--agent {
+  background: #f3e9e7;
+  color: #4a2a2a;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.agent-bubble--user {
+  background: #7b2a2a;
+  color: #fff;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+/* ── Download Buttons ───────────────────────────────────── */
+.agent-download-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 4px 0 2px;
+  justify-content: flex-start;
+}
+
+.agent-dl-btn {
+  background: #7b2a2a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+
+.agent-dl-btn:hover {
+  background: #5e1f1f;
+}
+
+/* ── Input Row ──────────────────────────────────────────── */
+.agent-input-row {
+  display: flex;
+  padding: 8px 10px;
+  gap: 6px;
+  border-top: 1px solid #e9dcd8;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.agent-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+.agent-input:focus {
+  border-color: #7b2a2a;
+  box-shadow: 0 0 0 2px rgba(123,42,42,0.12);
+}
+
+.agent-send-btn {
+  background: #7b2a2a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+
+.agent-send-btn:hover {
+  background: #5e1f1f;
+}
+
+/* ── Hint Footer ────────────────────────────────────────── */
+.agent-hint {
+  font-size: 11px;
+  color: #999;
+  text-align: center;
+  padding: 5px 10px 8px;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.agent-switch-link {
+  background: none;
+  border: none;
+  color: #7b2a2a;
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+/* ── Mobile ─────────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .agent-panel {
+    right: 8px;
+    width: calc(100vw - 16px);
+    bottom: 74px;
+  }
+
+  .agent-fab {
+    right: 12px;
+    bottom: 16px;
+  }
+}

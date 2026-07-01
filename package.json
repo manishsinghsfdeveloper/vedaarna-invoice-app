@@ -12,6 +12,7 @@
     "start": "vite"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "axios": "^1.13.1",
     "emailjs-com": "^3.2.0",
     "framer-motion": "^12.23.24",

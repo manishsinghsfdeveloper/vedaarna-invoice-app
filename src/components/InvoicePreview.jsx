@@ -41,15 +41,10 @@ export default function InvoicePreview({
   return (
     <div
       ref={invoiceRef}
-      style={{
-        background: "#fff",
-        padding: 20,
-        borderRadius: 12,
-        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-      }}
+      className="invoice-print-root"
     >
-      {/* Header */}
-      <header style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", borderBottom: "2px solid #7b2a2a", paddingBottom: 10 }}>
+      {/* ── Header ─────────────────────────────────────────── */}
+      <header className="invoice-print-header">
         <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
           <img src={`${import.meta.env.BASE_URL}logo_new.jpg`} alt="logo" style={{ height: 80, borderRadius: 6 }} />
           <div style={{ color: "#6b3b3b", fontSize: 13 }}>
@@ -65,7 +60,8 @@ export default function InvoicePreview({
         </div>
       </header>
 
-      <section style={{ marginTop: 16 }}>
+      {/* ── Body (grows to fill space) ──────────────────────── */}
+      <section className="invoice-print-body">
         {/* Bill To / Payable To boxes */}
         <div className="invoice-header-section">
           <div className="bill-to box">
@@ -82,7 +78,7 @@ export default function InvoicePreview({
           </div>
         </div>
 
-        {/* Invoice table header */}
+        {/* Invoice table */}
         <div className="invoice-table" style={{ marginTop: 16 }}>
           <div className="invoice-table-header">
             <div></div>
@@ -94,7 +90,6 @@ export default function InvoicePreview({
             <div>Amount</div>
           </div>
 
-          {/* Rows with AnimatePresence */}
           <AnimatePresence>
             {items.map((it) => {
               const amount = (it.qty || 0) * (it.rate || 0);
@@ -110,24 +105,20 @@ export default function InvoicePreview({
                   layout
                   onMouseEnter={() => setHoveredItemId(it.id)}
                   onMouseLeave={() => {
-                    // if confirmation is open for this item we keep hovered state until tooltip closed
                     if (confirmItemId !== it.id) setHoveredItemId(null);
                   }}
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
                   transition={{ duration: 0.25 }}
-                  style={{ display: "grid", gridTemplateColumns: "0.6fr 2fr 1fr 1fr 1fr 1fr 1fr", alignItems: "center", gap: "6px", position: "relative" }}
+                  style={{ display: "grid", gridTemplateColumns: "0.6fr 2fr 1fr 1fr 1fr 1fr 1fr", alignItems: "center", gap: "6px" }}
                 >
-                  {/* Remove button + per-item tooltip */}
                   <div style={{ position: "relative", textAlign: "center" }}>
-                    {/* show button only when hoveredItemId === this id */}
                     {hoveredItemId === it.id && (
                       <button
                         className="remove-btn"
                         onClick={(e) => {
                           e.stopPropagation();
-                          // toggle confirmation for this item
                           setConfirmItemId((cur) => (cur === it.id ? null : it.id));
                         }}
                         title="Remove item"
@@ -135,8 +126,6 @@ export default function InvoicePreview({
                         −
                       </button>
                     )}
-
-                    {/* tooltip popped only for the item with confirmItemId */}
                     <AnimatePresence>
                       {confirmItemId === it.id && (
                         <motion.div
@@ -145,45 +134,20 @@ export default function InvoicePreview({
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -6 }}
                           transition={{ duration: 0.18 }}
-                          onMouseEnter={() => {
-                            // keep tooltip alive while mouse is over it
-                            setConfirmItemId(it.id);
-                            setHoveredItemId(it.id);
-                          }}
-                          onMouseLeave={() => {
-                            // close tooltip when user leaves tooltip area
-                            setConfirmItemId(null);
-                            setHoveredItemId(null);
-                          }}
+                          onMouseEnter={() => { setConfirmItemId(it.id); setHoveredItemId(it.id); }}
+                          onMouseLeave={() => { setConfirmItemId(null); setHoveredItemId(null); }}
                         >
                           <div>Remove this item?</div>
                           <div className="tooltip-actions" style={{ marginTop: 6 }}>
-                            <button
-                              className="confirm-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteConfirmed(it.id);
-                              }}
-                            >
-                              Yes
-                            </button>
-                            <button
-                              className="cancel-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setConfirmItemId(null);
-                                setHoveredItemId(null);
-                              }}
-                            >
-                              No
-                            </button>
+                            <button className="confirm-btn" onClick={(e) => { e.stopPropagation(); handleDeleteConfirmed(it.id); }}>Yes</button>
+                            <button className="cancel-btn" onClick={(e) => { e.stopPropagation(); setConfirmItemId(null); setHoveredItemId(null); }}>No</button>
                           </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </div>
 
-                  <div style={{ textAlign: "left" }}>{it.name}</div>
+                  <div>{it.name}</div>
                   <div>{it.qty}</div>
                   <div>{currency(it.rate)}</div>
                   <div>{it.discount}%</div>
@@ -195,24 +159,72 @@ export default function InvoicePreview({
           </AnimatePresence>
         </div>
 
-        {/* Totals */}
-        <div style={{ textAlign: "right", marginTop: 12 }}>
+        {/* Totals — separated from items by top border */}
+        <div className="invoice-totals">
           <div>Subtotal: <strong>{currency(subtotal)}</strong></div>
           <div>Discount: <strong>- {currency(totalDiscount)}</strong></div>
-          <div>Tax: <strong>{currency(totalTax)}</strong></div>
-          {advanceAmount > 0 && <div style={{ color: "#b91c1c" }}>Advance Payment: <strong>- {currency(advanceAmount)}</strong></div>}
-          <div style={{ fontSize: 20, fontWeight: 700, marginTop: 8, color: "#7b2a2a" }}>Grand Total: {currency(finalTotal)}</div>
-        </div>
-
-        {/* Footer & banner */}
-        <div style={{ marginTop: 40, color: "#6b3b3b", textAlign: "center" }}>
-          Thank you for shopping at VedAarna Studio.<br />For custom fittings allow 7–10 days.
-        </div>
-
-        <div style={{ marginTop: 16, textAlign: "center" }}>
-          <img src={`${import.meta.env.BASE_URL}Bottom_Banner.jpg`} alt="VedAarna Studio Banner" style={{ width: "100%", marginTop: 16, borderRadius: 8, objectFit: "cover" }} />
+          {hasValidCustomerGST ? (
+            <>
+              <div>CGST (2.5%): <strong>{currency(totalTax / 2)}</strong></div>
+              <div>SGST (2.5%): <strong>{currency(totalTax / 2)}</strong></div>
+              <div style={{ borderTop: "1px solid #e9dcd8", marginTop: 4, paddingTop: 4 }}>
+                Tax Total: <strong>{currency(totalTax)}</strong>
+              </div>
+            </>
+          ) : (
+            <div>Tax: <strong>{currency(totalTax)}</strong></div>
+          )}
+          {advanceAmount > 0 && (
+            <div style={{ color: "#b91c1c" }}>
+              Advance Payment: <strong>- {currency(advanceAmount)}</strong>
+            </div>
+          )}
+          <div className="invoice-grand-total">Grand Total: {currency(finalTotal)}</div>
         </div>
       </section>
+
+      {/* ── Footer — always at bottom ───────────────────────── */}
+      <footer className="invoice-print-footer">
+        <div className="invoice-footer-text">
+          Thank you for shopping at VedAarna Studio.<br />For custom fittings allow 7–10 days.
+        </div>
+        {/* Text-based banner — replaces Bottom_Banner.jpg; renders perfectly at any page size */}
+        <div className="invoice-footer-banner-text">
+          {/* Brand name block */}
+          <div className="ifbt-brand-name">VEDAARNA STUDIO</div>
+          <div className="ifbt-tagline">A Legacy in Every Stitch</div>
+
+          {/* Services line — nowrap keeps it on one line */}
+          <div className="ifbt-headline">
+            Bridal Blouse, Anarkali &amp; Lehenga, Gowns, Churidars, Western Wear
+          </div>
+
+          <div className="ifbt-email">
+            <span className="ifbt-icon">✉</span> vedaaranstudio@gmail.com
+          </div>
+          <div className="ifbt-follow">Follow Us</div>
+          <div className="ifbt-social">
+            {/* Proper Instagram SVG icon */}
+            <span className="ifbt-ig-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{verticalAlign:"middle",marginRight:3}}>
+                <defs>
+                  <radialGradient id="ig-grad" cx="30%" cy="107%" r="130%">
+                    <stop offset="0%" stopColor="#fdf497"/>
+                    <stop offset="20%" stopColor="#fd5949"/>
+                    <stop offset="45%" stopColor="#d6249f"/>
+                    <stop offset="75%" stopColor="#285AEB"/>
+                  </radialGradient>
+                </defs>
+                <rect x="2" y="2" width="20" height="20" rx="5.5" ry="5.5" fill="url(#ig-grad)"/>
+                <circle cx="12" cy="12" r="4.5" stroke="#fff" strokeWidth="1.8" fill="none"/>
+                <circle cx="17.5" cy="6.5" r="1.1" fill="#fff"/>
+              </svg>
+            </span>vedaarnastudio
+            &nbsp;&nbsp;
+            <span className="ifbt-fb-icon">f</span> vedaarnastudio
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

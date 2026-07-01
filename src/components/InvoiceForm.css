@@ -4,14 +4,40 @@
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 320px;
+  /* No max-width — fills the left grid column naturally */
+}
+
+.form-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 8px;
 }
 
 .form-title {
   color: #7b2a2a;
-  margin-bottom: 16px;
-  font-size: 20px;
-  text-align: center;
+  margin: 0;
+  font-size: 18px;
+  flex: 1;
+}
+
+.new-invoice-btn {
+  background: transparent;
+  color: #7b2a2a;
+  border: 1.5px solid #7b2a2a;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+}
+
+.new-invoice-btn:hover {
+  background: #7b2a2a;
+  color: #fff;
 }
 
 .form-section {
@@ -60,4 +86,40 @@ input:focus {
 
 .add-btn:hover {
   background: #5e1f1f;
+}
+
+/* ==============================
+   GST Radio / Toggle
+============================== */
+.gst-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7b2a2a;
+  cursor: pointer;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  user-select: none;
+}
+
+.gst-radio-input {
+  width: 16px;
+  height: 16px;
+  accent-color: #7b2a2a;
+  cursor: pointer;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.gst-reference {
+  font-size: 12px;
+  color: #5e1f1f;
+  background: #fdf3f3;
+  border: 1px dashed #d9a0a0;
+  border-radius: 6px;
+  padding: 5px 10px;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
 }

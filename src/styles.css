@@ -1,5 +1,11 @@
 
 /* Minimal styling */
-body { margin:0; font-family: Georgia, 'Times New Roman', serif; background:#f6ece8; }
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  background: #f6ece8;
+  min-width: 320px;
+}
 input, button { font-family: inherit; }
 a { color: inherit; }

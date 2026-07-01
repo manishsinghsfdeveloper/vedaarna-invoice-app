@@ -1,9 +1,164 @@
 /* ==============================
+   Invoice root — flex column so footer always sits at bottom
+============================== */
+.invoice-print-root {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.invoice-print-header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  border-bottom: 2px solid #7b2a2a;
+  padding-bottom: 10px;
+}
+
+/* Body grows to push footer down */
+.invoice-print-body {
+  flex: 1;
+  margin-top: 16px;
+}
+
+/* Footer always at bottom, no extra white space */
+.invoice-print-footer {
+  margin-top: 24px;
+  border-top: 1px solid #e9dcd8;
+  padding-top: 14px;
+}
+
+.invoice-footer-text {
+  color: #6b3b3b;
+  text-align: center;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+/* ── Text-based footer banner (replaces Bottom_Banner.jpg) ── */
+.invoice-footer-banner-text {
+  background: #f5e6e0;          /* same pinkish-cream as the image bg */
+  border-radius: 10px;
+  padding: 12px 16px 14px;
+  text-align: center;
+  font-family: inherit;
+  line-height: 1.45;
+  overflow: hidden;             /* prevents nowrap headline from stretching container */
+}
+
+/* Brand name — large, above the headline */
+.ifbt-brand-name {
+  font-size: 22px;
+  font-weight: 900;
+  color: #6b2323;
+  letter-spacing: 0.12em;
+  margin-bottom: 2px;
+}
+
+/* Tagline — italic, slightly smaller */
+.ifbt-tagline {
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 600;
+  color: #7b2a2a;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+/* Services line — single line, no break */
+.ifbt-headline {
+  font-size: 13px;
+  font-weight: 800;
+  color: #6b2323;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 6px;
+}
+
+.ifbt-email {
+  font-size: 15px;
+  color: #4a1c1c;
+  margin-bottom: 8px;
+}
+
+.ifbt-icon {
+  margin-right: 4px;
+}
+
+.ifbt-follow {
+  display: inline-block;
+  background: linear-gradient(90deg, #e040fb, #f8b133);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 20px;
+  padding: 3px 22px;
+  margin-bottom: 8px;
+  letter-spacing: 0.04em;
+}
+
+.ifbt-social {
+  font-size: 14px;
+  color: #4a1c1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* Instagram icon wrapper — no extra CSS needed, SVG handles it */
+.ifbt-ig-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.ifbt-fb-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #1877f2;
+  color: #fff;
+  font-weight: 900;
+  font-size: 12px;
+  border-radius: 4px;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* Totals block — sits in normal block flow AFTER the table */
+.invoice-totals {
+  display: block;
+  width: 100%;
+  text-align: right;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 2px solid #e9dcd8;
+  clear: both;
+  position: relative;
+  z-index: 1;
+}
+
+.invoice-grand-total {
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 8px;
+  color: #7b2a2a;
+}
+
+/* ==============================
    Invoice header section (Bill To / Payable To)
 ============================== */
 .invoice-header-section {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 12px;
   align-items: stretch;
 }
@@ -32,10 +187,10 @@
 /* ==============================
    INVOICE TABLE BASE STYLE
 ============================== */
+/* Outer wrapper is a plain block — rows stack in normal flow */
 .invoice-table {
   width: 100%;
-  display: grid;
-  gap: 8px;
+  display: block;
   margin-top: 10px;
 }
 
@@ -48,6 +203,16 @@
   text-align: center;
   font-size: 14px;
   color: #4a2a2a;
+  /* Rows are block-level grid elements — no extra positioning */
+  position: static;
+  margin-bottom: 2px;
+}
+
+/* Item column (2nd column) is always left-aligned in both header and rows */
+.invoice-table-header > div:nth-child(2),
+.invoice-table-row > div:nth-child(2) {
+  text-align: left;
+  padding-left: 4px;
 }
 
 .invoice-table-header {

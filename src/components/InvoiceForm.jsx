@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './InvoiceForm.css';
 import InvoiceActions from "./InvoiceActions";
+
+const OWNER_GSTIN = '06ABCFV1239R1ZP';
 
 export default function InvoiceForm({
   invoiceMeta,
@@ -9,8 +11,12 @@ export default function InvoiceForm({
   setCustomer,
   addItem,
   invoiceRef,
-  grandTotal,
+  totals,
+  onReset,
+  onInvoiceSent,
+  downloadFnRef,
 }) {
+  const [useOwnerGST, setUseOwnerGST] = useState(false);
   const [newItem, setNewItem] = useState({
     name: '',
     qty: 1,
@@ -18,6 +24,25 @@ export default function InvoiceForm({
     discount: 0,
     tax: 0,
   });
+
+  // Auto-set tax to 5% when a valid GSTIN is present
+  const isValidGST = customer.gstin && customer.gstin.trim() !== '' && customer.gstin.trim().toUpperCase() !== 'NA';
+  useEffect(() => {
+    setNewItem(prev => ({ ...prev, tax: isValidGST ? 5 : 0 }));
+  }, [isValidGST]);
+
+  // Keep radio in sync if user manually clears the GSTIN field
+  useEffect(() => {
+    if (!customer.gstin || customer.gstin.trim() === '') {
+      setUseOwnerGST(false);
+    }
+  }, [customer.gstin]);
+
+  const handleOwnerGSTToggle = (e) => {
+    const checked = e.target.checked;
+    setUseOwnerGST(checked);
+    setCustomer({ ...customer, gstin: checked ? OWNER_GSTIN : '' });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,12 +52,17 @@ export default function InvoiceForm({
   const handleAddItem = () => {
     if (!newItem.name.trim()) return;
     addItem(newItem);
-    setNewItem({ name: '', qty: 1, rate: 0, discount: 0, tax: 0 });
+    setNewItem({ name: '', qty: 1, rate: 0, discount: 0, tax: isValidGST ? 5 : 0 });
   };
 
   return (
     <div className="form-container">
-      <h2 className="form-title">VedAarna Invoice Builder</h2>
+      <div className="form-header-row">
+        <h2 className="form-title">VedAarna Invoice Builder</h2>
+        <button className="new-invoice-btn" onClick={onReset} title="Clear all fields and start a new invoice">
+          + New Invoice
+        </button>
+      </div>
 
       {/* -------------------------
           INVOICE META INFO
@@ -61,10 +91,26 @@ export default function InvoiceForm({
           GSTIN & ADVANCE PAYMENT
       -------------------------- */}
       <div className="form-section">
+        {/* Add GST radio toggle */}
+        <label className="gst-radio-label">
+          <input
+            type="checkbox"
+            className="gst-radio-input"
+            checked={useOwnerGST}
+            onChange={handleOwnerGSTToggle}
+          />
+          Add GST (VedAarna Studio)
+        </label>
+        {useOwnerGST && (
+          <div className="gst-reference">
+            GSTIN: <strong>{OWNER_GSTIN}</strong>
+          </div>
+        )}
+
         <label>GSTIN (optional)</label>
         <input
           type="text"
-          value={customer.gstin}
+          value={customer.gstin || ''}
           onChange={(e) => setCustomer({ ...customer, gstin: e.target.value })}
           placeholder="Enter GSTIN (leave blank or NA if not applicable)"
         />
@@ -176,7 +222,10 @@ export default function InvoiceForm({
         <InvoiceActions
           invoiceRef={invoiceRef}
           customer={customer}
-          totals={{ grandTotal }}
+          totals={totals}
+          invoiceMeta={invoiceMeta}
+          onInvoiceSent={onInvoiceSent}
+          downloadFnRef={downloadFnRef}
         />
       </div>
     </div>
