@@ -210,25 +210,33 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
       const node = invoiceRef.current;
 
       const clone = node.cloneNode(true);
-      clone.style.width          = "900px";
-      clone.style.position       = "absolute";
-      clone.style.left           = "-9999px";
-      clone.style.top            = "0";
-      clone.style.background     = "#fff";
-      clone.style.height         = "auto";
-      // minHeight + flex column mirror the PDF clone so the body grows and
-      // the footer is pinned to the bottom with no gap below the totals.
-      clone.style.minHeight      = "1270px";   // 900px wide ≈ A4 proportion
-      clone.style.display        = "flex";
-      clone.style.flexDirection  = "column";
-      clone.style.overflow       = "visible";
-      clone.style.boxSizing      = "border-box";
+      clone.style.width         = "900px";
+      clone.style.position      = "absolute";
+      clone.style.left          = "-9999px";
+      clone.style.top           = "0";
+      clone.style.background    = "#fff";
+      clone.style.height        = "auto";
+      clone.style.overflow      = "visible";
+      clone.style.boxSizing     = "border-box";
+      // For images we do NOT use flex/minHeight — that inflates scrollHeight
+      // and creates blank space below the footer.  Instead we render at natural
+      // height then crop the canvas to the footer's actual bottom edge.
+      clone.style.display       = "block";
       clone.querySelectorAll(".remove-btn, .remove-tooltip").forEach(el => el.remove());
       document.body.appendChild(clone);
 
-      // Wait for layout + images
+      // Wait for layout
       await new Promise(r => requestAnimationFrame(r));
       await new Promise(r => requestAnimationFrame(r));
+
+      // Measure the footer's bottom edge in the clone's coordinate space
+      const footerEl   = clone.querySelector(".invoice-print-footer");
+      const cloneRect  = clone.getBoundingClientRect();
+      const footerRect = footerEl ? footerEl.getBoundingClientRect() : null;
+      // Natural content height = footer bottom relative to clone top (+ clone padding)
+      const naturalH   = footerRect
+        ? Math.ceil(footerRect.bottom - cloneRect.top)
+        : clone.scrollHeight;
 
       const canvas = await html2canvas(clone, {
         scale: 2,
@@ -237,14 +245,22 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
         logging: false,
         backgroundColor: "#ffffff",
         width: clone.scrollWidth,
-        height: clone.scrollHeight,
+        height: naturalH,
         windowWidth: clone.scrollWidth,
-        windowHeight: clone.scrollHeight,
+        windowHeight: naturalH,
       });
 
       document.body.removeChild(clone);
 
-      const image = canvas.toDataURL("image/png");
+      // Crop the canvas to naturalH * scale so no blank rows leak through
+      const scale      = 2;
+      const cropHeight = naturalH * scale;
+      const cropped    = document.createElement("canvas");
+      cropped.width    = canvas.width;
+      cropped.height   = Math.min(cropHeight, canvas.height);
+      cropped.getContext("2d").drawImage(canvas, 0, 0);
+
+      const image = cropped.toDataURL("image/png");
       const link = document.createElement("a");
       link.href = image;
       link.download = `VedAarna_${customer.name || "Invoice"}.png`;
@@ -350,18 +366,25 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
       clone.style.top           = "0";
       clone.style.background    = "#fff";
       clone.style.height        = "auto";
-      // minHeight + flex column mirror the PDF clone so the body grows and
-      // the footer is pinned to the bottom with no gap below the totals.
-      clone.style.minHeight     = "1270px";   // 900px wide ≈ A4 proportion
-      clone.style.display       = "flex";
-      clone.style.flexDirection = "column";
       clone.style.overflow      = "visible";
       clone.style.boxSizing     = "border-box";
+      // For images we do NOT use flex/minHeight — that inflates scrollHeight
+      // and creates blank space below the footer.  Instead we render at natural
+      // height then crop the canvas to the footer's actual bottom edge.
+      clone.style.display       = "block";
       clone.querySelectorAll(".remove-btn, .remove-tooltip").forEach(el => el.remove());
       document.body.appendChild(clone);
 
       await new Promise(r => requestAnimationFrame(r));
       await new Promise(r => requestAnimationFrame(r));
+
+      // Measure the footer's bottom edge in the clone's coordinate space
+      const footerEl   = clone.querySelector(".invoice-print-footer");
+      const cloneRect  = clone.getBoundingClientRect();
+      const footerRect = footerEl ? footerEl.getBoundingClientRect() : null;
+      const naturalH   = footerRect
+        ? Math.ceil(footerRect.bottom - cloneRect.top)
+        : clone.scrollHeight;
 
       const canvas = await html2canvas(clone, {
         scale: 2,
@@ -370,11 +393,19 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
         logging: false,
         backgroundColor: "#ffffff",
         width: clone.scrollWidth,
-        height: clone.scrollHeight,
+        height: naturalH,
         windowWidth: clone.scrollWidth,
-        windowHeight: clone.scrollHeight,
+        windowHeight: naturalH,
       });
       document.body.removeChild(clone);
+
+      // Crop canvas to exact footer bottom — eliminates any sub-pixel overrun
+      const scale      = 2;
+      const cropHeight = naturalH * scale;
+      const cropped    = document.createElement("canvas");
+      cropped.width    = canvas.width;
+      cropped.height   = Math.min(cropHeight, canvas.height);
+      cropped.getContext("2d").drawImage(canvas, 0, 0);
 
       const filename = `VedAarna_${customerName}.png`;
 
@@ -384,8 +415,8 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
         typeof navigator.canShare === "function";
 
       if (canShareFiles) {
-        // Convert canvas → Blob → File
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+        // Convert cropped canvas → Blob → File
+        const blob = await new Promise(resolve => cropped.toBlob(resolve, "image/png"));
         const file = new File([blob], filename, { type: "image/png" });
 
         if (navigator.canShare({ files: [file] })) {
@@ -401,7 +432,7 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
 
       // ── Step 3: fallback — download PNG + open wa.me with text ────────
       // Auto-save the image so the user can attach it manually
-      const dataUrl = canvas.toDataURL("image/png");
+      const dataUrl = cropped.toDataURL("image/png");
       const link    = document.createElement("a");
       link.href     = dataUrl;
       link.download = filename;
