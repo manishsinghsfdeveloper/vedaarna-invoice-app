@@ -299,22 +299,123 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
     }
   }
 
-  /** Share on WhatsApp — always enabled, opens general WhatsApp Web with pre-filled message */
-  function whatsappShare() {
+  /**
+   * Share on WhatsApp with invoice image attached.
+   *
+   * Strategy:
+   *  1. Render the invoice to a PNG canvas (same pipeline as downloadBillImage).
+   *  2. Try the Web Share API (navigator.share with files) — works on Android
+   *     Chrome / Safari iOS and opens WhatsApp directly with the image.
+   *  3. If Web Share API is unavailable (desktop / unsupported browser):
+   *     - Auto-download the PNG so the user has it in hand.
+   *     - Open wa.me with the pre-filled text message.
+   *     - Show a toast guiding them to manually attach the saved image.
+   *
+   * WhatsApp does NOT accept file attachments via the wa.me URL scheme —
+   * this two-step approach is the standard solution used by all invoicing apps.
+   */
+  async function whatsappShare() {
+    if (!invoiceRef.current) {
+      toast.error("Invoice not ready yet!");
+      return;
+    }
+
     const invoiceNumber = invoiceMeta?.number || "VA#1001";
-    const invoiceDate   = invoiceMeta?.date || "";
+    const invoiceDate   = invoiceMeta?.date   || "";
+    const customerName  = customer.name       || "—";
     const text = [
       `🧵 *VedAarna Studio — Invoice*`,
       `Invoice #: ${invoiceNumber}`,
       `Date: ${invoiceDate}`,
-      `Customer: ${customer.name || "—"}`,
+      `Customer: ${customerName}`,
       `Total: ₹${(totals.grandTotal || 0).toFixed(2)}`,
       ``,
       `Thank you for shopping at VedAarna Studio! 🙏`,
     ].join("\n");
 
-    const wa = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(wa, "_blank");
+    try {
+      setLoading(true);
+
+      // ── Step 1: render invoice to PNG canvas ──────────────────────────
+      const node  = invoiceRef.current;
+      const clone = node.cloneNode(true);
+      clone.style.width      = "900px";
+      clone.style.position   = "absolute";
+      clone.style.left       = "-9999px";
+      clone.style.top        = "0";
+      clone.style.background = "#fff";
+      clone.style.height     = "auto";
+      clone.style.overflow   = "visible";
+      clone.style.boxSizing  = "border-box";
+      clone.querySelectorAll(".remove-btn, .remove-tooltip").forEach(el => el.remove());
+      document.body.appendChild(clone);
+
+      await new Promise(r => requestAnimationFrame(r));
+      await new Promise(r => requestAnimationFrame(r));
+
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        width: clone.scrollWidth,
+        height: clone.scrollHeight,
+        windowWidth: clone.scrollWidth,
+        windowHeight: clone.scrollHeight,
+      });
+      document.body.removeChild(clone);
+
+      const filename = `VedAarna_${customerName}.png`;
+
+      // ── Step 2: try Web Share API (mobile browsers) ───────────────────
+      const canShareFiles =
+        typeof navigator.share === "function" &&
+        typeof navigator.canShare === "function";
+
+      if (canShareFiles) {
+        // Convert canvas → Blob → File
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+        const file = new File([blob], filename, { type: "image/png" });
+
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: `VedAarna Invoice — ${customerName}`,
+            text,
+            files: [file],
+          });
+          setLoading(false);
+          return; // share sheet opened — done
+        }
+      }
+
+      // ── Step 3: fallback — download PNG + open wa.me with text ────────
+      // Auto-save the image so the user can attach it manually
+      const dataUrl = canvas.toDataURL("image/png");
+      const link    = document.createElement("a");
+      link.href     = dataUrl;
+      link.download = filename;
+      link.click();
+
+      // Open WhatsApp with the pre-filled text
+      const wa = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      window.open(wa, "_blank");
+
+      toast.info(
+        "Invoice image saved! Tap the 📎 attachment icon in WhatsApp and select the downloaded image.",
+        { autoClose: 7000 }
+      );
+    } catch (err) {
+      // User cancelled the share sheet — not an error
+      if (err?.name === "AbortError") {
+        /* silent */
+      } else {
+        console.error("WhatsApp share failed:", err);
+        toast.error("Could not share invoice. Try downloading it manually.");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   /** Download A5 multi-page PDF (7 items per page, single PDF file) */
@@ -419,7 +520,7 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
         onClick={whatsappShare}
         disabled={loading}
       >
-        Share on WhatsApp
+        {loading ? "Preparing..." : "Share on WhatsApp"}
       </button>
 
       <button
