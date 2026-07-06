@@ -210,14 +210,19 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
       const node = invoiceRef.current;
 
       const clone = node.cloneNode(true);
-      clone.style.width = "900px";
-      clone.style.position = "absolute";
-      clone.style.left = "-9999px";
-      clone.style.top = "0";
-      clone.style.background = "#fff";
-      clone.style.height = "auto";
-      clone.style.overflow = "visible";
-      clone.style.boxSizing = "border-box";
+      clone.style.width          = "900px";
+      clone.style.position       = "absolute";
+      clone.style.left           = "-9999px";
+      clone.style.top            = "0";
+      clone.style.background     = "#fff";
+      clone.style.height         = "auto";
+      // minHeight + flex column mirror the PDF clone so the body grows and
+      // the footer is pinned to the bottom with no gap below the totals.
+      clone.style.minHeight      = "1270px";   // 900px wide ≈ A4 proportion
+      clone.style.display        = "flex";
+      clone.style.flexDirection  = "column";
+      clone.style.overflow       = "visible";
+      clone.style.boxSizing      = "border-box";
       clone.querySelectorAll(".remove-btn, .remove-tooltip").forEach(el => el.remove());
       document.body.appendChild(clone);
 
@@ -339,14 +344,19 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
       // ── Step 1: render invoice to PNG canvas ──────────────────────────
       const node  = invoiceRef.current;
       const clone = node.cloneNode(true);
-      clone.style.width      = "900px";
-      clone.style.position   = "absolute";
-      clone.style.left       = "-9999px";
-      clone.style.top        = "0";
-      clone.style.background = "#fff";
-      clone.style.height     = "auto";
-      clone.style.overflow   = "visible";
-      clone.style.boxSizing  = "border-box";
+      clone.style.width         = "900px";
+      clone.style.position      = "absolute";
+      clone.style.left          = "-9999px";
+      clone.style.top           = "0";
+      clone.style.background    = "#fff";
+      clone.style.height        = "auto";
+      // minHeight + flex column mirror the PDF clone so the body grows and
+      // the footer is pinned to the bottom with no gap below the totals.
+      clone.style.minHeight     = "1270px";   // 900px wide ≈ A4 proportion
+      clone.style.display       = "flex";
+      clone.style.flexDirection = "column";
+      clone.style.overflow      = "visible";
+      clone.style.boxSizing     = "border-box";
       clone.querySelectorAll(".remove-btn, .remove-tooltip").forEach(el => el.remove());
       document.body.appendChild(clone);
 
