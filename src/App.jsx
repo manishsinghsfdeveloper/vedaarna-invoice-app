@@ -6,28 +6,64 @@ import InvoiceAgent from './components/InvoiceAgent'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
+// ── Financial year helper ─────────────────────────────────────────────────────
+// Returns e.g. "26-27" for FY 2026-27 (Apr 2026 – Mar 2027)
+function getCurrentFinancialYear() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth() + 1 // 1-based
+  // FY starts in April (month 4)
+  const fyStart = month >= 4 ? year : year - 1
+  const fyEnd = fyStart + 1
+  return `${String(fyStart).slice(-2)}-${String(fyEnd).slice(-2)}`
+}
+
 // ── Invoice number helpers ────────────────────────────────────────────────────
+// Format: VS/01/26-27
 function loadInvoiceNumber() {
   const saved = localStorage.getItem('va_invoice_number')
   if (saved) return saved
-  const initial = 'VA#1001'
+  const initial = `VS/01/${getCurrentFinancialYear()}`
   localStorage.setItem('va_invoice_number', initial)
   return initial
 }
 
 function nextInvoiceNumber(current) {
-  // Extracts the numeric part of "VA#1001" → 1001, increments, returns "VA#1002"
-  const match = current.match(/^(VA#)(\d+)$/)
+  // Parse "VS/01/26-27" → increment the numeric part → "VS/02/26-27"
+  const match = current.match(/^VS\/(\d+)\/(.+)$/)
   if (match) {
-    const next = String(Number(match[2]) + 1)
-    return `${match[1]}${next}`
+    const next = String(Number(match[1]) + 1).padStart(2, '0')
+    const fy = getCurrentFinancialYear()
+    return `VS/${next}/${fy}`
   }
   return current
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── Date format helper: "YYYY-MM-DD" → "DD-MM-YYYY" ─────────────────────────
+export function formatDateForDisplay(isoDate) {
+  if (!isoDate) return ''
+  const parts = isoDate.split('-')
+  if (parts.length !== 3) return isoDate
+  return `${parts[2]}-${parts[1]}-${parts[0]}`
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Empty dispatch meta object — single source of truth for the new fields
+const EMPTY_DISPATCH = {
+  shipTo: '',
+  paymentMethod: '',
+  refNo: '',
+  buyerOrderNo: '',
+  dispatchDocNo: '',
+  dispatchThrough: '',
+  destination: '',
+  termsOfDelivery: '',
+}
+
 export default function App() {
-  const [customer, setCustomer] = useState({ name: '', phone: '', email: '', gstin: '', advance: 0 })
+  const [customer, setCustomer] = useState({ name: '', phone: '', email: '', address: '', gstin: '', recipientGstin: '', advance: 0 })
+  const [dispatchMeta, setDispatchMeta] = useState({ ...EMPTY_DISPATCH })
   const [invoiceMeta, setInvoiceMeta] = useState({
     number: loadInvoiceNumber(),
     date: new Date().toISOString().split('T')[0]
@@ -40,7 +76,8 @@ export default function App() {
   function resetInvoice() {
     const newNumber = nextInvoiceNumber(invoiceMeta.number)
     localStorage.setItem('va_invoice_number', newNumber)
-    setCustomer({ name: '', phone: '', email: '', gstin: '', advance: 0 })
+    setCustomer({ name: '', phone: '', email: '', address: '', gstin: '', recipientGstin: '', advance: 0 })
+    setDispatchMeta({ ...EMPTY_DISPATCH })
     setInvoiceMeta({ number: newNumber, date: new Date().toISOString().split('T')[0] })
     setItems([])
   }
@@ -53,8 +90,20 @@ export default function App() {
   }
 
   // Called by InvoiceAgent when the user completes the conversation
-  function handleAgentComplete({ customer: agentCustomer, items: agentItems }) {
-    setCustomer({ name: agentCustomer.name || '', phone: agentCustomer.phone || '', email: agentCustomer.email || '', gstin: agentCustomer.gstin || '', advance: Number(agentCustomer.advance || 0) });
+  function handleAgentComplete({ customer: agentCustomer, items: agentItems, dispatchMeta: agentDispatch }) {
+    setCustomer({ name: agentCustomer.name || '', phone: agentCustomer.phone || '', email: agentCustomer.email || '', address: agentCustomer.address || '', gstin: agentCustomer.gstin || '', recipientGstin: agentCustomer.recipientGstin || '', advance: Number(agentCustomer.advance || 0) });
+    if (agentDispatch) {
+      setDispatchMeta({
+        shipTo:           agentDispatch.shipTo           || '',
+        paymentMethod:    agentDispatch.paymentMethod    || '',
+        refNo:            agentDispatch.refNo            || '',
+        buyerOrderNo:     agentDispatch.buyerOrderNo     || '',
+        dispatchDocNo:    agentDispatch.dispatchDocNo    || '',
+        dispatchThrough:  agentDispatch.dispatchThrough  || '',
+        destination:      agentDispatch.destination      || '',
+        termsOfDelivery:  agentDispatch.termsOfDelivery  || '',
+      });
+    }
     setItems(agentItems.map(it => ({
       id: it.id || `${Date.now()}-${Math.random()}`,
       name: it.name || '',
@@ -70,7 +119,7 @@ export default function App() {
   function handleAgentDownload(type) {
     const fns = downloadFnRef.current;
     if (type === "PDF" && fns.generatePDF) fns.generatePDF(true);
-    else if (type === "A5 PDF" && fns.downloadInvoiceA5) fns.downloadInvoiceA5();
+    else if (type === "Multi-page PDF" && fns.downloadInvoiceMultiPage) fns.downloadInvoiceMultiPage();
     else if (type === "Image" && fns.downloadBillImage) fns.downloadBillImage();
     else if (type === "WhatsApp" && fns.whatsappShare) fns.whatsappShare();
   }
@@ -116,6 +165,8 @@ export default function App() {
             setInvoiceMeta={setInvoiceMeta}
             customer={customer}
             setCustomer={setCustomer}
+            dispatchMeta={dispatchMeta}
+            setDispatchMeta={setDispatchMeta}
             addItem={addItem}
             invoiceRef={invoiceRef}
             totals={totals}
@@ -130,6 +181,7 @@ export default function App() {
           <InvoicePreview
             customer={customer}
             invoiceMeta={invoiceMeta}
+            dispatchMeta={dispatchMeta}
             items={items}
             setItems={setItems}
             subtotal={subtotal}
