@@ -5,189 +5,193 @@
   display: flex;
   flex-direction: column;
   background: #fff;
-  padding: 20px;
+  padding: 14px 18px;       /* reduced from 20px to reclaim vertical space */
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  font-size: 12px;          /* base font — everything inherits this */
 }
 
+/* ==============================
+   HEADER
+============================== */
 .invoice-print-header {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
   border-bottom: 2px solid #7b2a2a;
   padding-bottom: 10px;
+  gap: 10px;
+}
+
+/* Address block next to logo */
+.header-address-block {
+  color: #6b3b3b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.header-company-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #7b2a2a;
+  margin-bottom: 2px;
+}
+
+.header-address-line {
+  color: #5a3030;
+}
+
+.header-gstin {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a1c1c;
+  margin: 2px 0;
 }
 
 /* Body grows to push footer down */
 .invoice-print-body {
   flex: 1;
-  margin-top: 16px;
-}
-
-/* Footer always at bottom, no extra white space */
-.invoice-print-footer {
-  margin-top: 24px;
-  border-top: 1px solid #e9dcd8;
-  padding-top: 14px;
-}
-
-.invoice-footer-text {
-  color: #6b3b3b;
-  text-align: center;
-  font-size: 13px;
-  margin-bottom: 12px;
-}
-
-/* ── Text-based footer banner (replaces Bottom_Banner.jpg) ── */
-.invoice-footer-banner-text {
-  background: #f5e6e0;          /* same pinkish-cream as the image bg */
-  border-radius: 10px;
-  padding: 12px 16px 14px;
-  text-align: center;
-  font-family: inherit;
-  line-height: 1.45;
-  overflow: hidden;             /* prevents nowrap headline from stretching container */
-}
-
-/* Brand name — large, above the headline */
-.ifbt-brand-name {
-  font-size: 22px;
-  font-weight: 900;
-  color: #6b2323;
-  letter-spacing: 0.12em;
-  margin-bottom: 2px;
-}
-
-/* Tagline — italic, slightly smaller */
-.ifbt-tagline {
-  font-size: 14px;
-  font-style: italic;
-  font-weight: 600;
-  color: #7b2a2a;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
-}
-
-/* Services line — single line, no break */
-.ifbt-headline {
-  font-size: 13px;
-  font-weight: 800;
-  color: #6b2323;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 6px;
-}
-
-.ifbt-email {
-  font-size: 15px;
-  color: #4a1c1c;
-  margin-bottom: 8px;
-}
-
-.ifbt-icon {
-  margin-right: 4px;
-}
-
-.ifbt-follow {
-  display: inline-block;
-  background: linear-gradient(90deg, #e040fb, #f8b133);
-  color: #fff;
-  font-weight: 700;
-  font-size: 13px;
-  border-radius: 20px;
-  padding: 3px 22px;
-  margin-bottom: 8px;
-  letter-spacing: 0.04em;
-}
-
-.ifbt-social {
-  font-size: 14px;
-  color: #4a1c1c;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-/* Instagram icon wrapper — no extra CSS needed, SVG handles it */
-.ifbt-ig-icon {
-  display: inline-flex;
-  align-items: center;
-}
-
-.ifbt-fb-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #1877f2;
-  color: #fff;
-  font-weight: 900;
-  font-size: 12px;
-  border-radius: 4px;
-  width: 18px;
-  height: 18px;
-  line-height: 1;
-  text-align: center;
-  vertical-align: middle;
-}
-
-/* Totals block — sits in normal block flow AFTER the table */
-.invoice-totals {
-  display: block;
-  width: 100%;
-  text-align: right;
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 2px solid #e9dcd8;
-  clear: both;
-  position: relative;
-  z-index: 1;
-}
-
-.invoice-grand-total {
-  font-size: 20px;
-  font-weight: 700;
-  margin-top: 8px;
-  color: #7b2a2a;
+  margin-top: 14px;
 }
 
 /* ==============================
-   Invoice header section (Bill To / Payable To)
+   BILL TO / CONSIGNEE / DISPATCH META SECTION
 ============================== */
-.invoice-header-section {
+.invoice-bill-to-section {
   display: flex;
-  flex-direction: row;
-  gap: 12px;
-  align-items: stretch;
-}
-
-/* common box style */
-.box {
-  background: #fff;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
   border: 1px solid #e9dcd8;
-  border-radius: 10px;
-  padding: 12px 14px;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* LEFT column: consignee + bill-to stacked */
+.bill-to-col {
+  flex: 0 0 48%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Consignee (Ship to) sub-box */
+.consignee-box {
+  padding: 8px 14px;
+  border-bottom: 1px solid #e9dcd8;
+  font-size: 12px;
+  color: #4a2a2a;
+}
+
+.box-label {
+  font-weight: 700;
+  font-size: 11.5px;
+  color: #7b2a2a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 3px;
+}
+
+.consignee-payment {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2328;
+  margin-bottom: 2px;
+}
+
+.consignee-detail {
+  font-size: 12px;
+  color: #57606a;
+  margin-bottom: 1px;
+}
+
+/* Bill To box inside the left column */
+.bill-to.box {
+  background: #fff;
+  padding: 8px 14px;
   box-sizing: border-box;
-}
-
-/* specific sizes */
-.bill-to {
-  flex: 1 1 60%;
   text-align: left;
+  flex: 1;
+  border: none;   /* outer border handled by .invoice-bill-to-section */
+  border-radius: 0;
+  box-shadow: none;
 }
 
-.payable-to {
-  flex: 1 1 35%;
-  text-align: right;
+/* When consignee is above, add separator */
+.bill-to.bill-to-below {
+  border-top: 1px solid #e9dcd8;
+}
+
+.box-title {
+  font-weight: 700;
+  font-size: 12px;
+  color: #7b2a2a;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bill-to-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2328;
+  margin-bottom: 2px;
+}
+
+.bill-to-detail {
+  font-size: 12px;
+  color: #57606a;
+  margin-bottom: 1px;
+}
+
+/* RIGHT column: dispatch meta grid */
+.dispatch-meta-col {
+  flex: 1;
+  border-left: 1px solid #e9dcd8;
+  align-self: stretch;
+}
+
+/* 2-column inner grid: label | value, label | value … */
+.dispatch-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100%;
+}
+
+.dm-cell {
+  padding: 5px 8px;
+  font-size: 11.5px;
+  border-bottom: 1px solid #e9dcd8;
+  border-right: 1px solid #e9dcd8;
+  line-height: 1.45;
+}
+
+.dm-cell:last-child,
+.dm-cell:nth-last-child(2):not(.dm-full) {
+  border-bottom: none;
+}
+
+.dm-label {
+  color: #7b2a2a;
+  font-weight: 600;
+  background: #fdf8f6;
+}
+
+.dm-value {
+  color: #1f2328;
+  font-weight: 500;
+  border-right: none;
+}
+
+/* Full-width row (Terms of Delivery spans both columns) */
+.dm-full {
+  grid-column: span 2;
+  border-right: none;
 }
 
 /* ==============================
    INVOICE TABLE BASE STYLE
 ============================== */
-/* Outer wrapper is a plain block — rows stack in normal flow */
 .invoice-table {
   width: 100%;
   display: block;
@@ -197,28 +201,63 @@
 .invoice-table-header,
 .invoice-table-row {
   display: grid;
-  grid-template-columns: 0.6fr 2fr 1fr 1fr 1fr 1fr 1fr;
-  padding: 8px 10px;
+  /* col order: [remove] Item HSN/SAC Qty Rate Disc Tax Amount */
+  grid-template-columns: 0.6fr 2fr 1fr 0.8fr 1fr 0.8fr 0.8fr 1fr;
+  padding: 7px 8px;
   border-bottom: 1px solid #eee;
-  text-align: center;
-  font-size: 14px;
+  font-size: 13px;
   color: #4a2a2a;
-  /* Rows are block-level grid elements — no extra positioning */
   position: static;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
-/* Item column (2nd column) is always left-aligned in both header and rows */
-.invoice-table-header > div:nth-child(2),
-.invoice-table-row > div:nth-child(2) {
+/* Numeric columns: right-align + tabular figures */
+.col-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-size: 13px;
+  padding-right: 4px;
+}
+
+/* Item text column — left-align */
+.col-item {
   text-align: left;
   padding-left: 4px;
 }
 
+/* SAC code column — centred, muted, small */
+.col-sac {
+  text-align: center;
+  font-size: 11px;
+  color: #888;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Item column (2nd column) left-aligned in header too */
+.invoice-table-header > div:nth-child(2) {
+  text-align: left;
+  padding-left: 4px;
+}
+
+/* HSN/SAC header (3rd column) — centred */
+.invoice-table-header > div:nth-child(3) {
+  text-align: center;
+}
+
+/* Other header columns (4th onward) — right-align */
+.invoice-table-header > div:nth-child(n+4) {
+  text-align: right;
+  padding-right: 4px;
+}
+
 .invoice-table-header {
   background: #f3e9e7;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 13px;
   color: #7b2a2a;
+  border-radius: 6px 6px 0 0;
 }
 
 .invoice-table-row:hover {
@@ -231,42 +270,376 @@
 }
 
 /* ==============================
-   RESPONSIVE (Tablet)
+   AMOUNT IN WORDS
+============================== */
+.amount-in-words-block {
+  border: 1px solid #e9dcd8;
+  border-radius: 6px;
+  padding: 5px 10px;
+  margin-top: 7px;
+  background: #fffaf8;
+  font-size: 11.5px;
+  color: #4a1c1c;
+}
+
+.aiw-label {
+  font-weight: 500;
+  color: #7b2a2a;
+}
+
+.aiw-value {
+  font-weight: 700;
+  font-style: italic;
+  color: #1f2328;
+}
+
+/* ==============================
+   GST BREAKDOWN TABLE
+============================== */
+.gst-breakdown-table {
+  margin-top: 8px;
+  border: 1px solid #e9dcd8;
+  border-radius: 6px;
+  overflow: hidden;
+  font-size: 11px;
+}
+
+.gst-breakdown-header,
+.gst-breakdown-row,
+.gst-breakdown-total {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr 0.8fr 1fr 0.8fr 1fr 1fr;
+  padding: 5px 8px;
+  border-bottom: 1px solid #f0e6e3;
+}
+
+.gst-breakdown-header {
+  background: #f3e9e7;
+  font-weight: 700;
+  color: #7b2a2a;
+  font-size: 11.5px;
+  text-align: right;
+}
+
+.gst-breakdown-header > div:first-child {
+  text-align: left;
+}
+
+.gst-breakdown-row > div,
+.gst-breakdown-total > div {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.gst-breakdown-row > div:first-child,
+.gst-breakdown-total > div:first-child {
+  text-align: left;
+}
+
+.gst-breakdown-row {
+  color: #4a2a2a;
+}
+
+.gst-breakdown-total {
+  background: #fdf3f0;
+  font-weight: 600;
+  color: #7b2a2a;
+  border-bottom: none;
+}
+
+/* ==============================
+   TOTALS BLOCK
+============================== */
+.invoice-totals {
+  display: block;
+  width: 100%;
+  text-align: right;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1.5px solid #e9dcd8;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  line-height: 1.6;
+}
+
+/* Grand Total same size as other totals lines — bold weight distinguishes it */
+.invoice-grand-total {
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 4px;
+  color: #7b2a2a;
+}
+
+/* ==============================
+   AMOUNT IN WORDS
+   (reused for both charge and tax)
+============================== */
+.gst-section {
+  margin-top: 0;
+}
+
+.tax-in-words-block {
+  border: 1px solid #e9dcd8;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  padding: 4px 10px;
+  background: #fffaf8;
+  font-size: 11.5px;
+  color: #4a1c1c;
+}
+
+/* ==============================
+   DECLARATION + BANK DETAILS ROW
+============================== */
+
+/* Single outer box with curved border — divider is a right border on the bank panel */
+.invoice-declaration-row {
+  display: flex;
+  margin-top: 10px;
+  border: 1.5px solid #e9dcd8;
+  border-radius: 8px;
+  overflow: hidden;
+  align-items: stretch;
+}
+
+/* LEFT: bank details — no individual border; right border acts as divider */
+.invoice-bank-details {
+  flex: 0 0 45%;
+  font-size: 11.5px;
+  color: #4a2a2a;
+  border-right: 1.5px solid #e9dcd8;
+  padding: 8px 12px;
+  background: #fff;
+}
+
+.bank-title {
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #7b2a2a;
+  margin-bottom: 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.bank-row {
+  margin-bottom: 4px;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.bank-label {
+  font-weight: 600;
+  color: #6b3b3b;
+  display: inline-block;
+  min-width: 62px;
+}
+
+/* RIGHT: declaration */
+.invoice-declaration {
+  flex: 1;
+  font-size: 12px;
+  color: #4a2a2a;
+  text-align: right;
+  padding: 10px 14px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.decl-title {
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #7b2a2a;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.decl-text {
+  font-size: 11.5px;
+  color: #57606a;
+  line-height: 1.55;
+  flex: 1;
+}
+
+.decl-signatory {
+  font-size: 12px;
+  color: #4a1c1c;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
+.decl-sign-space {
+  height: 32px;
+}
+
+/* ==============================
+   FOOTER
+============================== */
+.invoice-print-footer {
+  margin-top: 8px;
+  border-top: 1px solid #e9dcd8;
+  padding-top: 6px;
+}
+
+.invoice-footer-jurisdiction {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #4a1c1c;
+  letter-spacing: 0.06em;
+  margin-bottom: 1px;
+}
+
+.invoice-footer-computer {
+  text-align: center;
+  font-size: 10.5px;
+  font-style: italic;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+/* ── Text-based footer banner ── */
+.invoice-footer-banner-text {
+  background: #f5e6e0;
+  border-radius: 8px;
+  padding: 7px 14px 8px;
+  text-align: center;
+  font-family: inherit;
+  line-height: 1.35;
+  overflow: hidden;
+}
+
+.ifbt-brand-name {
+  font-size: 16px;
+  font-weight: 900;
+  color: #6b2323;
+  letter-spacing: 0.12em;
+  margin-bottom: 1px;
+}
+
+.ifbt-tagline {
+  font-size: 11px;
+  font-style: italic;
+  font-weight: 600;
+  color: #7b2a2a;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.ifbt-headline {
+  font-size: 11px;
+  font-weight: 800;
+  color: #6b2323;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+
+.ifbt-email {
+  font-size: 11px;
+  color: #4a1c1c;
+  margin-bottom: 3px;
+}
+
+.ifbt-icon {
+  margin-right: 3px;
+}
+
+.ifbt-follow {
+  display: inline-block;
+  background: linear-gradient(90deg, #e040fb, #f8b133);
+  color: #fff;
+  font-weight: 700;
+  font-size: 10px;
+  border-radius: 20px;
+  padding: 1px 16px;
+  margin-bottom: 3px;
+  letter-spacing: 0.04em;
+}
+
+.ifbt-social {
+  font-size: 13px;
+  color: #4a1c1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.ifbt-ig-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.ifbt-fb-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #1877f2;
+  color: #fff;
+  font-weight: 900;
+  font-size: 11px;
+  border-radius: 4px;
+  width: 17px;
+  height: 17px;
+  line-height: 1;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* ==============================
+   RESPONSIVE (Tablet ≤900px)
 ============================== */
 @media (max-width: 900px) {
   .invoice-table-header,
   .invoice-table-row {
     grid-template-columns: 0.8fr 1.8fr 1fr 1fr 1fr 1fr 1fr;
-    font-size: 13px;
+    font-size: 12px;
     padding: 6px 4px;
+  }
+
+  .gst-breakdown-header,
+  .gst-breakdown-row,
+  .gst-breakdown-total {
+    font-size: 11px;
   }
 }
 
 /* ==============================
-   MOBILE (700px and below)
+   MOBILE (≤700px)
 ============================== */
 @media (max-width: 700px) {
-  .invoice-header-section {
+  .invoice-declaration-row {
     flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    width: 100%;
+    border-radius: 8px;
   }
 
-  .bill-to,
-  .payable-to {
-    width: 100%;
+  .invoice-bank-details {
     flex: none;
-    text-align: left;
-    border: 1px solid #e9dcd8;
-    border-radius: 10px;
-    padding: 12px 14px;
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
-    box-sizing: border-box;
+    width: 100%;
+    border-right: none;
+    border-bottom: 1.5px solid #e9dcd8;
   }
 
-  .payable-to {
-    text-align: right;
+  .invoice-declaration {
+    flex: none;
+    width: 100%;
+    text-align: left;
+  }
+
+  .decl-signatory {
+    text-align: left;
+  }
+
+  .invoice-table-header {
+    display: none;
   }
 
   .invoice-table {
@@ -275,13 +648,9 @@
     gap: 10px;
   }
 
-  .invoice-table-header {
-    display: none;
-  }
-
   .invoice-table-row {
     display: grid;
-    grid-template-columns: 0.6fr 2fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: 0.6fr 2fr 1fr 0.8fr 1fr 0.8fr 0.8fr 1fr;
     background: #ffffff;
     border: 1px solid #eee;
     border-radius: 10px;
@@ -292,7 +661,7 @@
   }
 
   .invoice-table-row div {
-    font-size: 13px;
+    font-size: 12px;
     overflow-wrap: anywhere;
   }
 
@@ -300,13 +669,15 @@
     font-weight: 600;
     color: #7b2a2a;
   }
+
+  .gst-breakdown-table {
+    overflow-x: auto;
+  }
 }
 
 /* ==============================
    REMOVE BUTTON + TOOLTIP
 ============================== */
-
-/* Always-visible remove button (gold-themed) */
 .remove-btn {
   border: 1px solid #d9b17b;
   background-color: #fffaf5;
@@ -324,7 +695,6 @@
   opacity: 0.9;
 }
 
-/* Hover animation */
 .remove-btn:hover {
   background-color: #7b2a2a;
   color: #fff;
@@ -334,7 +704,6 @@
   box-shadow: 0 0 6px rgba(184, 134, 11, 0.5);
 }
 
-/* Tooltip styling */
 .remove-tooltip {
   position: absolute;
   top: -48px;
@@ -352,17 +721,10 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -10px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
+  from { opacity: 0; transform: translate(-50%, -10px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
 }
 
-/* Tooltip inner actions */
 .tooltip-actions {
   margin-top: 4px;
   display: flex;
@@ -390,13 +752,8 @@
   color: #444;
 }
 
-.confirm-btn:hover {
-  background: #7b2a2a;
-}
-
-.cancel-btn:hover {
-  background: #ddd;
-}
+.confirm-btn:hover { background: #7b2a2a; }
+.cancel-btn:hover  { background: #ddd; }
 
 /* Hide from print */
 @media print {

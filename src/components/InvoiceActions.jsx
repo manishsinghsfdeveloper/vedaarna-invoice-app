@@ -13,85 +13,95 @@ const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";  // e.g. "template_xxxxxxx"
 const EMAILJS_PUBLIC_KEY  = "YOUR_PUBLIC_KEY";   // e.g. "abcXXXXXXXXXXXXXX"
 // ─────────────────────────────────────────────────────────────────────────────
 
-// A5 page dimensions in mm
-const A5_W_MM = 148;
-// Pixel width for DOM rendering (148mm at ~96dpi ≈ 559px)
-const A5_PX_WIDTH = 560;
-const ITEMS_PER_PAGE = 7;
+// A4 page dimensions
+const A4_W_MM    = 210;
+const A4_H_MM    = 297;
+const A4_PX_WIDTH = 794; // 210mm at 96dpi
+
+// Items per page: ~14 rows fit comfortably on A4 at 13px font
+const A4_ITEMS_PER_PAGE = 14;
 
 /** Render an off-screen DOM node to a canvas via html2canvas */
-async function nodeToCanvas(node) {
+async function nodeToCanvas(node, pxWidth) {
   return html2canvas(node, {
     scale: 2,
     useCORS: true,
     allowTaint: true,
     logging: false,
     backgroundColor: "#ffffff",
-    windowWidth: node.scrollWidth,
+    width: pxWidth || node.scrollWidth,
+    height: node.scrollHeight,
+    windowWidth: pxWidth || node.scrollWidth,
     windowHeight: node.scrollHeight,
   });
 }
 
-/** Add a canvas image to a jsPDF page, fitting to A5 page width */
-function addCanvasToPage(pdf, canvas, isFirstPage) {
-  const imgData = canvas.toDataURL("image/png");
-  const canvasAspect = canvas.height / canvas.width;
-  const imgH = A5_W_MM * canvasAspect;
-  if (!isFirstPage) pdf.addPage();
-  pdf.addImage(imgData, "PNG", 0, 0, A5_W_MM, imgH);
-}
-
-/** Build a styled A5-sized clone of the invoice node showing only the given rows */
-function buildA5PageNode(originalNode, rowEls, { showBillTo, showTotals, showFooter }) {
+/**
+ * Build a clone of the invoice node sized for a specific px width,
+ * showing only the given item rows plus optional sections.
+ *
+ * showBillTo   — show Bill To box (first page only)
+ * showTotals   — show totals + amount-in-words + GST section (last page only)
+ * showDecl     — show declaration+bank row (last page only)
+ * showFooter   — show footer banner (last page only)
+ */
+function buildPageNode(originalNode, rowEls, pxWidth, {
+  showBillTo, showTotals, showDecl, showFooter,
+}) {
   const clone = originalNode.cloneNode(true);
 
-  // Size the clone for A5
-  clone.style.width = `${A5_PX_WIDTH}px`;
-  clone.style.boxSizing = "border-box";
-  clone.style.position = "absolute";
-  clone.style.left = "-9999px";
-  clone.style.top = "0";
-  clone.style.background = "#fff";
-  clone.style.fontSize = "11px";
-  clone.style.lineHeight = "1.35";
-  clone.style.padding = "14px 16px";
+  clone.style.width        = `${pxWidth}px`;
+  clone.style.boxSizing    = "border-box";
+  clone.style.position     = "absolute";
+  clone.style.left         = "-9999px";
+  clone.style.top          = "0";
+  clone.style.background   = "#fff";
+  clone.style.fontSize     = "12px";
+  clone.style.lineHeight   = "1.4";
+  clone.style.padding      = "16px 20px";
   clone.style.borderRadius = "0";
-  clone.style.boxShadow = "none";
-  clone.style.height = "auto";
-  clone.style.overflow = "visible";
-  // flex column must be kept so footer stays at bottom
-  clone.style.display = "flex";
-  clone.style.flexDirection = "column";
+  clone.style.boxShadow    = "none";
+  clone.style.height       = "auto";
+  clone.style.minHeight    = "0";
+  clone.style.overflow     = "visible";
+  clone.style.display      = "block"; // block so height = natural content height
 
-  // Remove interactive elements
+  // Strip interactive elements
   clone.querySelectorAll(".remove-btn, .remove-tooltip").forEach(el => el.remove());
 
-  // Bill To / Payable To section
-  const billToSection = clone.querySelector(".invoice-header-section");
+  // Bill To
+  const billToSection = clone.querySelector(".invoice-bill-to-section");
   if (billToSection) billToSection.style.display = showBillTo ? "" : "none";
 
-  // FORCE the table header row to show — the @media (max-width:700px) rule
-  // hides it when the clone width is 560px, so override it explicitly here
+  // Force table header visible (media query may hide it at small widths)
   const tableHeader = clone.querySelector(".invoice-table-header");
   if (tableHeader) {
     tableHeader.style.display = "grid";
-    tableHeader.style.gridTemplateColumns = "0.6fr 2fr 1fr 1fr 1fr 1fr 1fr";
+    tableHeader.style.gridTemplateColumns = "0.6fr 2fr 1fr 0.8fr 1fr 0.8fr 0.8fr 1fr";
   }
 
-  // Item rows: clear all then insert only the slice for this page
+  // Replace item rows with only the slice for this page
   clone.querySelectorAll(".invoice-table-row").forEach(r => r.remove());
   const tableEl = clone.querySelector(".invoice-table");
   if (tableEl) rowEls.forEach(row => tableEl.appendChild(row.cloneNode(true)));
 
-  // Totals — use the new class name .invoice-totals
+  // Totals block + amount-in-words + GST section (hidden on non-last pages)
   const totalsEl = clone.querySelector(".invoice-totals");
   if (totalsEl) totalsEl.style.display = showTotals ? "" : "none";
 
-  // Footer — use the new .invoice-print-footer class
+  const aiwEl = clone.querySelector(".amount-in-words-block");
+  if (aiwEl) aiwEl.style.display = showTotals ? "" : "none";
+
+  const gstEl = clone.querySelector(".gst-section");
+  if (gstEl) gstEl.style.display = showTotals ? "" : "none";
+
+  // Declaration + bank row
+  const declEl = clone.querySelector(".invoice-declaration-row");
+  if (declEl) declEl.style.display = showDecl ? "" : "none";
+
+  // Footer
   const footerEl = clone.querySelector(".invoice-print-footer");
-  if (footerEl) {
-    footerEl.style.display = showFooter ? "" : "none";
-  }
+  if (footerEl) footerEl.style.display = showFooter ? "" : "none";
 
   return clone;
 }
@@ -105,90 +115,84 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
       downloadFnRef.current = {
         generatePDF,
         downloadBillImage,
-        downloadInvoiceA5,
+        downloadInvoiceMultiPage,
         whatsappShare,
       };
     }
   });
 
-  /** Generate A4 PDF */
+  /**
+   * Shared sectioned A4 PDF renderer.
+   * Splits item rows across pages (A4_ITEMS_PER_PAGE per page).
+   * Header is repeated on every page. Bill To only on page 1.
+   * Totals, amount-in-words, GST breakdown, declaration, footer only on last page.
+   */
+  async function renderSectionedPDF(pageFormat = "a4") {
+    const originalNode = invoiceRef.current;
+    const allRowEls = Array.from(originalNode.querySelectorAll(".invoice-table-row"));
+
+    if (allRowEls.length === 0) {
+      toast.warn("No items to include in the invoice.");
+      return null;
+    }
+
+    const PX_WIDTH = A4_PX_WIDTH;
+    const W_MM     = A4_W_MM;
+    const H_MM     = A4_H_MM;
+    const PER_PAGE = A4_ITEMS_PER_PAGE;
+
+    // Chunk rows
+    const pages = [];
+    for (let i = 0; i < allRowEls.length; i += PER_PAGE) {
+      pages.push(allRowEls.slice(i, i + PER_PAGE));
+    }
+    const totalPages = pages.length;
+    const pdf = new jsPDF("p", "mm", pageFormat);
+
+    for (let idx = 0; idx < totalPages; idx++) {
+      const isFirst = idx === 0;
+      const isLast  = idx === totalPages - 1;
+
+      const pageNode = buildPageNode(originalNode, pages[idx], PX_WIDTH, {
+        showBillTo: isFirst,
+        showTotals: isLast,
+        showDecl:   isLast,
+        showFooter: isLast,
+      });
+
+      document.body.appendChild(pageNode);
+      await new Promise(r => requestAnimationFrame(r));
+      await new Promise(r => requestAnimationFrame(r));
+
+      const canvas = await nodeToCanvas(pageNode, PX_WIDTH);
+      document.body.removeChild(pageNode);
+
+      const imgData    = canvas.toDataURL("image/png");
+      const canvasH_mm = (canvas.height / canvas.width) * W_MM;
+
+      if (idx > 0) pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, 0, W_MM, canvasH_mm, undefined, "FAST");
+    }
+
+    return pdf;
+  }
+
+  /** Download A4 PDF */
   async function generatePDF(saveLocally = true) {
     if (!invoiceRef.current) {
       toast.error("Invoice not ready yet!");
       return;
     }
-
     try {
       setLoading(true);
-      const node = invoiceRef.current;
-
-      const clone = node.cloneNode(true);
-      clone.style.width = "794px";
-      clone.style.position = "absolute";
-      clone.style.left = "-9999px";
-      clone.style.top = "0";
-      clone.style.background = "#fff";
-      clone.style.overflow = "visible";
-      clone.style.boxSizing = "border-box";
-      // A4 at 96dpi = 297mm × 3.7795px/mm ≈ 1123px.
-      // min-height forces the flex layout to fill one full page so the
-      // footer is pushed to the page bottom and there is no white gap.
-      clone.style.minHeight = "1123px";
-      clone.style.height = "auto";
-      clone.style.display = "flex";
-      clone.style.flexDirection = "column";
-      clone.querySelectorAll(".remove-btn, .remove-tooltip").forEach(el => el.remove());
-      document.body.appendChild(clone);
-
-      // Wait for layout + image decode
-      await new Promise(r => requestAnimationFrame(r));
-      await new Promise(r => requestAnimationFrame(r));
-
-      const canvas = await html2canvas(clone, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        width: clone.scrollWidth,
-        height: clone.scrollHeight,
-        windowWidth: clone.scrollWidth,
-        windowHeight: clone.scrollHeight,
-      });
-
-      document.body.removeChild(clone);
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = 210;
-      // Each A4 page is 297mm tall.  pdfHeight is the mm-height of the full canvas.
-      // If content fits in one page (≤297mm) it renders cleanly on one page.
-      // Multi-page invoices slice the canvas into 297mm segments.
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      const pageHeightMm = 297;
-
-      let heightLeft = pdfHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-      heightLeft -= pageHeightMm;
-
-      // Use a 1mm tolerance to prevent a spurious blank page when content
-      // fills almost exactly one page (floating-point near-zero remainder).
-      while (heightLeft > 1) {
-        position = heightLeft - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pageHeightMm;
-      }
+      const pdf = await renderSectionedPDF("a4");
+      if (!pdf) { setLoading(false); return; }
 
       const filename = `VedAarna_${customer.name || "Invoice"}.pdf`;
       if (saveLocally) {
         pdf.save(filename);
-        // Auto-increment invoice number after successful save
         if (onInvoiceSent) onInvoiceSent();
       }
-
       setLoading(false);
       return { pdf, filename, blob: pdf.output("blob") };
     } catch (err) {
@@ -210,33 +214,24 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
       const node = invoiceRef.current;
 
       const clone = node.cloneNode(true);
-      clone.style.width         = "900px";
-      clone.style.position      = "absolute";
-      clone.style.left          = "-9999px";
-      clone.style.top           = "0";
-      clone.style.background    = "#fff";
-      clone.style.height        = "auto";
-      clone.style.overflow      = "visible";
-      clone.style.boxSizing     = "border-box";
-      // For images we do NOT use flex/minHeight — that inflates scrollHeight
-      // and creates blank space below the footer.  Instead we render at natural
-      // height then crop the canvas to the footer's actual bottom edge.
-      clone.style.display       = "block";
+      clone.style.width     = "900px";
+      clone.style.position  = "absolute";
+      clone.style.left      = "-9999px";
+      clone.style.top       = "0";
+      clone.style.background = "#fff";
+      clone.style.height    = "auto";
+      clone.style.overflow  = "visible";
+      clone.style.boxSizing = "border-box";
+      clone.style.display   = "block"; // block so scrollHeight = natural content height
       clone.querySelectorAll(".remove-btn, .remove-tooltip").forEach(el => el.remove());
       document.body.appendChild(clone);
 
-      // Wait for layout
       await new Promise(r => requestAnimationFrame(r));
       await new Promise(r => requestAnimationFrame(r));
+      await new Promise(r => requestAnimationFrame(r)); // extra frame for banner bg paint
 
-      // Measure the footer's bottom edge in the clone's coordinate space
-      const footerEl   = clone.querySelector(".invoice-print-footer");
-      const cloneRect  = clone.getBoundingClientRect();
-      const footerRect = footerEl ? footerEl.getBoundingClientRect() : null;
-      // Natural content height = footer bottom relative to clone top (+ clone padding)
-      const naturalH   = footerRect
-        ? Math.ceil(footerRect.bottom - cloneRect.top)
-        : clone.scrollHeight;
+      // Use scrollHeight — fully reliable regardless of scroll position
+      const naturalH = clone.scrollHeight;
 
       const canvas = await html2canvas(clone, {
         scale: 2,
@@ -252,13 +247,8 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
 
       document.body.removeChild(clone);
 
-      // Crop the canvas to naturalH * scale so no blank rows leak through
-      const scale      = 2;
-      const cropHeight = naturalH * scale;
-      const cropped    = document.createElement("canvas");
-      cropped.width    = canvas.width;
-      cropped.height   = Math.min(cropHeight, canvas.height);
-      cropped.getContext("2d").drawImage(canvas, 0, 0);
+      // No crop needed — scrollHeight already matches exact content height
+      const cropped = canvas;
 
       const image = cropped.toDataURL("image/png");
       const link = document.createElement("a");
@@ -368,23 +358,15 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
       clone.style.height        = "auto";
       clone.style.overflow      = "visible";
       clone.style.boxSizing     = "border-box";
-      // For images we do NOT use flex/minHeight — that inflates scrollHeight
-      // and creates blank space below the footer.  Instead we render at natural
-      // height then crop the canvas to the footer's actual bottom edge.
-      clone.style.display       = "block";
+      clone.style.display = "block";
       clone.querySelectorAll(".remove-btn, .remove-tooltip").forEach(el => el.remove());
       document.body.appendChild(clone);
 
       await new Promise(r => requestAnimationFrame(r));
       await new Promise(r => requestAnimationFrame(r));
+      await new Promise(r => requestAnimationFrame(r));
 
-      // Measure the footer's bottom edge in the clone's coordinate space
-      const footerEl   = clone.querySelector(".invoice-print-footer");
-      const cloneRect  = clone.getBoundingClientRect();
-      const footerRect = footerEl ? footerEl.getBoundingClientRect() : null;
-      const naturalH   = footerRect
-        ? Math.ceil(footerRect.bottom - cloneRect.top)
-        : clone.scrollHeight;
+      const naturalH = clone.scrollHeight;
 
       const canvas = await html2canvas(clone, {
         scale: 2,
@@ -399,13 +381,7 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
       });
       document.body.removeChild(clone);
 
-      // Crop canvas to exact footer bottom — eliminates any sub-pixel overrun
-      const scale      = 2;
-      const cropHeight = naturalH * scale;
-      const cropped    = document.createElement("canvas");
-      cropped.width    = canvas.width;
-      cropped.height   = Math.min(cropHeight, canvas.height);
-      cropped.getContext("2d").drawImage(canvas, 0, 0);
+      const cropped = canvas;
 
       const filename = `VedAarna_${customerName}.png`;
 
@@ -459,72 +435,22 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
     }
   }
 
-  /** Download A5 multi-page PDF (7 items per page, single PDF file) */
-  async function downloadInvoiceA5() {
+  /** Download multi-page A4 PDF (14 items per page) — same engine as generatePDF */
+  async function downloadInvoiceMultiPage() {
     if (!invoiceRef.current) {
       toast.error("Invoice not ready yet!");
       return;
     }
-
     try {
       setLoading(true);
-
-      const originalNode = invoiceRef.current;
-      const allRowEls = Array.from(originalNode.querySelectorAll(".invoice-table-row"));
-
-      if (allRowEls.length === 0) {
-        toast.warn("No items to include in the invoice.");
-        setLoading(false);
-        return;
-      }
-
-      // Split rows into pages of ITEMS_PER_PAGE
-      const pages = [];
-      for (let i = 0; i < allRowEls.length; i += ITEMS_PER_PAGE) {
-        pages.push(allRowEls.slice(i, i + ITEMS_PER_PAGE));
-      }
-
-      const totalPages = pages.length;
-      const pdf = new jsPDF("p", "mm", "a5");
-
-      for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-        const isFirst = pageIndex === 0;
-        const isLast  = pageIndex === totalPages - 1;
-
-        const pageNode = buildA5PageNode(originalNode, pages[pageIndex], {
-          showBillTo: isFirst,
-          showTotals: isLast,
-          showFooter: isLast,
-        });
-
-        document.body.appendChild(pageNode);
-        // Two frames: first for layout, second to ensure images are painted
-        await new Promise(r => requestAnimationFrame(r));
-        await new Promise(r => requestAnimationFrame(r));
-
-        const canvas = await html2canvas(pageNode, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          logging: false,
-          backgroundColor: "#ffffff",
-          // Use scrollWidth/scrollHeight so nothing is clipped
-          width: pageNode.scrollWidth,
-          height: pageNode.scrollHeight,
-          windowWidth: pageNode.scrollWidth,
-          windowHeight: pageNode.scrollHeight,
-        });
-        document.body.removeChild(pageNode);
-
-        addCanvasToPage(pdf, canvas, pageIndex === 0);
-      }
-
-      const filename = `VedAarna_${customer.name || "Invoice"}_A5.pdf`;
+      const pdf = await renderSectionedPDF("a4");
+      if (!pdf) { setLoading(false); return; }
+      const filename = `VedAarna_${customer.name || "Invoice"}_multipage.pdf`;
       pdf.save(filename);
-      toast.success("A5 PDF downloaded!");
+      toast.success("Multi-page PDF downloaded!");
     } catch (err) {
-      console.error("A5 PDF generation error:", err);
-      toast.error("Failed to generate A5 PDF.");
+      console.error("Multi-page PDF error:", err);
+      toast.error("Failed to generate multi-page PDF.");
     } finally {
       setLoading(false);
     }
@@ -566,10 +492,10 @@ export default function InvoiceActions({ invoiceRef, customer, totals, invoiceMe
 
       <button
         className="btn-a5"
-        onClick={downloadInvoiceA5}
+        onClick={downloadInvoiceMultiPage}
         disabled={loading}
       >
-        {loading ? "Processing..." : "Download A5 PDF"}
+        {loading ? "Processing..." : "Download Multi-page PDF"}
       </button>
     </div>
   );

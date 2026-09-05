@@ -9,6 +9,8 @@ export default function InvoiceForm({
   setInvoiceMeta,
   customer,
   setCustomer,
+  dispatchMeta,
+  setDispatchMeta,
   addItem,
   invoiceRef,
   totals,
@@ -71,10 +73,11 @@ export default function InvoiceForm({
         <label>Invoice #</label>
         <input
           type="text"
-          value={invoiceMeta.number || 'VA#1001'}
+          value={invoiceMeta.number || ''}
           onChange={(e) =>
             setInvoiceMeta({ ...invoiceMeta, number: e.target.value })
           }
+          placeholder="e.g. VS/01/26-27"
         />
 
         <label>Date</label>
@@ -114,18 +117,6 @@ export default function InvoiceForm({
           onChange={(e) => setCustomer({ ...customer, gstin: e.target.value })}
           placeholder="Enter GSTIN (leave blank or NA if not applicable)"
         />
-
-        {/* ✅ Advance Payment Field */}
-        <label>Advance Payment (₹)</label>
-        <input
-          type="number"
-          min="0"
-          value={customer.advance || ''}
-          onChange={(e) =>
-            setCustomer({ ...customer, advance: Number(e.target.value) })
-          }
-          placeholder="e.g. 1000"
-        />
       </div>
 
       {/* -------------------------
@@ -156,6 +147,122 @@ export default function InvoiceForm({
           value={customer.email}
           onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
           placeholder="Email address"
+        />
+
+        <label>Address (optional)</label>
+        <input
+          type="text"
+          value={customer.address || ''}
+          onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
+          placeholder="Street, City, State - Pincode"
+        />
+
+        <label>Recipient GSTIN/UIN (optional)</label>
+        <input
+          type="text"
+          value={customer.recipientGstin || ''}
+          onChange={(e) => setCustomer({ ...customer, recipientGstin: e.target.value })}
+          placeholder="Recipient GSTIN/UIN (leave blank for N/A)"
+        />
+      </div>
+
+      {/* -------------------------
+          ADVANCE PAYMENT
+      -------------------------- */}
+      <div className="form-section">
+        <label>Advance Payment (₹)</label>
+        <input
+          type="number"
+          min="0"
+          value={customer.advance || ''}
+          onChange={(e) =>
+            setCustomer({ ...customer, advance: Number(e.target.value) })
+          }
+          placeholder="e.g. 1000"
+        />
+      </div>
+
+      {/* -------------------------
+          CONSIGNEE / PAYMENT
+      -------------------------- */}
+      <div className="form-section">
+        <h4>Consignee &amp; Payment</h4>
+
+        <label>Consignee / Ship To (optional)</label>
+        <input
+          type="text"
+          value={dispatchMeta.shipTo || ''}
+          onChange={(e) => setDispatchMeta({ ...dispatchMeta, shipTo: e.target.value })}
+          placeholder="e.g. Same as billing / address"
+        />
+
+        <label>Payment Method (optional)</label>
+        <select
+          value={dispatchMeta.paymentMethod || ''}
+          onChange={(e) => setDispatchMeta({ ...dispatchMeta, paymentMethod: e.target.value })}
+          style={{ padding: '6px 8px', border: '1px solid #ccc', borderRadius: 6, fontSize: 14 }}
+        >
+          <option value="">— Select —</option>
+          <option value="Cash">Cash</option>
+          <option value="Online">Online</option>
+          <option value="Card">Card</option>
+          <option value="UPI">UPI</option>
+          <option value="Cheque">Cheque</option>
+        </select>
+      </div>
+
+      {/* -------------------------
+          DISPATCH DETAILS
+      -------------------------- */}
+      <div className="form-section">
+        <h4>Dispatch Details (optional)</h4>
+
+        <label>Reference No. &amp; Date</label>
+        <input
+          type="text"
+          value={dispatchMeta.refNo || ''}
+          onChange={(e) => setDispatchMeta({ ...dispatchMeta, refNo: e.target.value })}
+          placeholder="e.g. REF/001"
+        />
+
+        <label>Buyer Order No.</label>
+        <input
+          type="text"
+          value={dispatchMeta.buyerOrderNo || ''}
+          onChange={(e) => setDispatchMeta({ ...dispatchMeta, buyerOrderNo: e.target.value })}
+          placeholder="e.g. ORD/2026/001"
+        />
+
+        <label>Dispatch Doc No.</label>
+        <input
+          type="text"
+          value={dispatchMeta.dispatchDocNo || ''}
+          onChange={(e) => setDispatchMeta({ ...dispatchMeta, dispatchDocNo: e.target.value })}
+          placeholder="e.g. DD/001"
+        />
+
+        <label>Dispatched Through</label>
+        <input
+          type="text"
+          value={dispatchMeta.dispatchThrough || ''}
+          onChange={(e) => setDispatchMeta({ ...dispatchMeta, dispatchThrough: e.target.value })}
+          placeholder="e.g. DTDC / Self"
+        />
+
+        <label>Destination</label>
+        <input
+          type="text"
+          value={dispatchMeta.destination || ''}
+          onChange={(e) => setDispatchMeta({ ...dispatchMeta, destination: e.target.value })}
+          placeholder="e.g. Gurugram"
+        />
+
+        <label>Terms of Delivery</label>
+        <input
+          type="text"
+          value={dispatchMeta.termsOfDelivery || ''}
+          onChange={(e) => setDispatchMeta({ ...dispatchMeta, termsOfDelivery: e.target.value })}
+          placeholder="e.g. Ex-Works"
         />
       </div>
 
